@@ -22,6 +22,8 @@ public class HttpClientDemo {
         try {
             System.out.println("--------------------------synchronousGet-----------------------");
             synchronousGet();
+            System.out.println("--------------------------asynchronousGet-----------------------");
+            asynchronousGet();
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -30,7 +32,7 @@ public class HttpClientDemo {
     }
 
 
-    static void synchronousGet() throws IOException, InterruptedException {
+    static void synchronousGet() throws Exception {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
@@ -53,5 +55,29 @@ public class HttpClientDemo {
         // print response body
         System.out.println(response.body());
     }
+
+    static void asynchronousGet() throws Exception {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("https://httpbin.org/get"))
+                .setHeader("User-Agent", "Java 11 HttpClient Bot")
+                .build();
+
+        CompletableFuture<HttpResponse<String>> response =
+                httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+
+        String result = response.thenApply(HttpResponse::body).get(5, TimeUnit.SECONDS);
+
+        System.out.println(result);
+
+
+    }
+
 
 }
