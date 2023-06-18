@@ -26,7 +26,8 @@ public class HttpClientDemo {
             asynchronousGet();
             System.out.println("--------------------------multipleConcurrentAsynchronously-----------------------");
             multipleConcurrentAsynchronously();
-
+            System.out.println("--------------------------postFromParameters-----------------------");
+            postFromParameters();
         } catch (Exception e) {
             throw new RuntimeException(e);
 
@@ -112,4 +113,43 @@ public class HttpClientDemo {
     }
 
 
+    static void postFromParameters() throws Exception {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+        Map<Object, Object> data = new HashMap<>();
+        data.put("username", "abc");
+        data.put("password", "123");
+        data.put("custom", "secret");
+        data.put("ts", System.currentTimeMillis());
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(ofFormData(data))
+                .uri(URI.create("https://httpbin.org/post"))
+                .setHeader("User-Agent", "Java 11 HttpClient Bot") // add request header
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // print status code
+        System.out.println(response.statusCode());
+
+        // print response body
+        System.out.println(response.body());
+    }
+
+    public static HttpRequest.BodyPublisher ofFormData(Map<Object, Object> data) {
+        var builder = new StringBuilder();
+        for (Map.Entry<Object, Object> entry : data.entrySet()) {
+            if (builder.length() > 0) {
+                builder.append("&");
+            }
+            builder.append(URLEncoder.encode(entry.getKey().toString(), StandardCharsets.UTF_8));
+            builder.append("=");
+            builder.append(URLEncoder.encode(entry.getValue().toString(), StandardCharsets.UTF_8));
+        }
+        return HttpRequest.BodyPublishers.ofString(builder.toString());
+    }
 }
