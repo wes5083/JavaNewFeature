@@ -30,6 +30,9 @@ public class HttpClientDemo {
             postFromParameters();
             System.out.println("--------------------------postJSON-----------------------");
             postJSON();
+            System.out.println("--------------------------authentication-----------------------");
+            authentication();
+
         } catch (Exception e) {
             throw new RuntimeException(e);
 
@@ -183,4 +186,35 @@ public class HttpClientDemo {
         // print response body
         System.out.println(response.body());
     }
+
+
+    private static final HttpClient httpClient = HttpClient.newBuilder()
+            .authenticator(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(
+                            "user",
+                            "password".toCharArray());
+                }
+
+            })
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+
+    static void authentication() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("http://localhost:8080/books"))
+                .setHeader("User-Agent", "Java 11 HttpClient Bot") // add request header
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // print status code
+        System.out.println(response.statusCode());
+
+        // print response body
+        System.out.println(response.body());
+    }
+
 }
