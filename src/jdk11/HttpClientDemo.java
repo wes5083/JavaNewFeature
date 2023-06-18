@@ -28,6 +28,8 @@ public class HttpClientDemo {
             multipleConcurrentAsynchronously();
             System.out.println("--------------------------postFromParameters-----------------------");
             postFromParameters();
+            System.out.println("--------------------------postJSON-----------------------");
+            postJSON();
         } catch (Exception e) {
             throw new RuntimeException(e);
 
@@ -151,5 +153,34 @@ public class HttpClientDemo {
             builder.append(URLEncoder.encode(entry.getValue().toString(), StandardCharsets.UTF_8));
         }
         return HttpRequest.BodyPublishers.ofString(builder.toString());
+    }
+
+    static void postJSON() throws Exception {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+        // json formatted data
+        String json = new StringBuilder()
+                .append("{")
+                .append("\"name\":\"mkyong\",")
+                .append("\"notes\":\"hello\"")
+                .append("}").toString();
+
+        // add json header
+        HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .uri(URI.create("https://httpbin.org/post"))
+                .setHeader("User-Agent", "Java 11 HttpClient Bot") // add request header
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // print status code
+        System.out.println(response.statusCode());
+
+        // print response body
+        System.out.println(response.body());
     }
 }
