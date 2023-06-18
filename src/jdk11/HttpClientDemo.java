@@ -24,6 +24,8 @@ public class HttpClientDemo {
             synchronousGet();
             System.out.println("--------------------------asynchronousGet-----------------------");
             asynchronousGet();
+            System.out.println("--------------------------multipleConcurrentAsynchronously-----------------------");
+            multipleConcurrentAsynchronously();
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -77,6 +79,36 @@ public class HttpClientDemo {
         System.out.println(result);
 
 
+    }
+
+
+    static void multipleConcurrentAsynchronously() throws Exception {
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+
+        HttpClient httpClient = HttpClient.newBuilder()
+                .executor(executorService)
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+
+        List<URI> targets = Arrays.asList(
+                new URI("https://httpbin.org/get?name=mkyong1"),
+                new URI("https://httpbin.org/get?name=mkyong2"),
+                new URI("https://httpbin.org/get?name=mkyong3"));
+
+        List<CompletableFuture<String>> result = targets.stream()
+                .map(url -> httpClient.sendAsync(
+                        HttpRequest.newBuilder(url)
+                                .GET()
+                                .setHeader("User-Agent", "Java 11 HttpClient Bot")
+                                .build(),
+                        HttpResponse.BodyHandlers.ofString())
+                        .thenApply(response -> response.body()))
+                .collect(Collectors.toList());
+
+        for (CompletableFuture<String> future : result) {
+            System.out.println(future.get());
+        }
     }
 
 
