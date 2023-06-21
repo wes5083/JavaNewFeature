@@ -7,5 +7,6 @@ public class VarKeyworld {
         String text = "Hello Java 10";
         var textVar = "Hello Java 10";
         var list = List.of("A","B","C");
+        System.out.println(list);
     }
 }
